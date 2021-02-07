@@ -75,7 +75,7 @@ router.post('/updatePassword', async (req, res) => {
 
     // Update Password
     try {
-        User.findOneAndUpdate({ password }, rhashPassword);
+        User.findOneAndUpdate({ password }, hashPassword);
         res.send('password updated');
     } catch (e) {
         res.status(400).send(e);
