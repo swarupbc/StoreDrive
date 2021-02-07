@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const User = require('../model/User');
 const Joi = require('@hapi/joi');
-const { registerValidation, loginValidation } = require('../validation');
+const { registerValidation, loginValidation, updatePasswordValidation } = require('../validation');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -54,6 +54,32 @@ router.post('/login', async (req, res) => {
     res.header('auth-token', token).send(token);
 
 
+});
+
+router.post('/updatePassword', async (req, res) => {
+    // Validate the data 
+    const { error } = updatePasswordValidation(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
+
+    //checking is user exist
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) return res.status(400).send('Email or Password is wrong');
+
+    //Password is Correct
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    if (!validPassword) return res.status(400).send('Email or Password is wrong');
+
+    //hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(req.body.password, salt);
+
+    // Update Password
+    try {
+        User.findOneAndUpdate({ password }, rhashPassword);
+        res.send('password updated');
+    } catch (e) {
+        res.status(400).send(e);
+    }
 });
 
 
